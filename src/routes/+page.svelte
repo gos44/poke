@@ -4,10 +4,10 @@
   
   // Estado para almacenar los datos de Pokémon
   let pokemonData: { id: number; name: string; url: string }[] = [];
-  let selectedPokemon = [];
-  let chartInstance = null;
-  let searchTerm = '';
-  let loading = false;
+  let selectedPokemon: { id: number; name: string; url: string }[] = []; // Tipo explícito
+  let chartInstance: Chart | null = null; // Tipo explícito para la instancia del gráfico
+  let searchTerm: string = ''; // Tipo explícito para el término de búsqueda
+  let loading: boolean = false; // Tipo explícito para el estado de carga
   
   // Colores para la gráfica
   const chartColors = [
@@ -44,13 +44,13 @@
   }
   
   // Obtener detalles de un Pokémon específico
-  async function fetchPokemonDetails(pokemon) {
+  async function fetchPokemonDetails(pokemon: PokemonAPIResponse) {
     try {
       const response = await fetch(pokemon.url);
       const data = await response.json();
       return {
         name: pokemon.name,
-        stats: data.stats.map(stat => ({
+        stats: data.stats.map((stat: { stat: { name: string }; base_stat: number }) => ({
           name: stat.stat.name,
           value: stat.base_stat
         }))
@@ -69,7 +69,9 @@
     
     // Obtener detalles de cada Pokémon seleccionado
     const pokemonDetailsPromises = selectedPokemon.map(pokemon => fetchPokemonDetails(pokemon));
-    const pokemonDetails = await Promise.all(pokemonDetailsPromises);
+    const pokemonDetails = (await Promise.all(pokemonDetailsPromises)).filter(
+      (pokemon): pokemon is { name: string; stats: { name: string; value: number }[] } => pokemon !== null
+    );
     
     // Preparar datos para la gráfica
     const chartData = {
@@ -84,7 +86,7 @@
     };
     
     // Crear o actualizar la gráfica
-    const ctx = document.getElementById('pokemonChart');
+    const ctx = document.getElementById('pokemonChart') as HTMLCanvasElement;
     
     if (chartInstance) {
       chartInstance.destroy();
@@ -112,7 +114,7 @@
   );
   
   // Seleccionar un Pokémon
-  function togglePokemon(pokemon) {
+  function togglePokemon(pokemon: { id: number; name: string; url: string }) {
     const index = selectedPokemon.findIndex(p => p.id === pokemon.id);
     if (index >= 0) {
       selectedPokemon = [...selectedPokemon.slice(0, index), ...selectedPokemon.slice(index + 1)];
@@ -127,7 +129,7 @@
   }
   
   // Comprobar si un Pokémon está seleccionado
-  function isPokemonSelected(pokemon) {
+  function isPokemonSelected(pokemon: { id: number; name: string; url: string }) {
     return selectedPokemon.some(p => p.id === pokemon.id);
   }
   
